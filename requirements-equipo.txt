@@ -1,0 +1,3 @@
+# Ejecutar sobre la copia original del repositorio oficial.
+-r requirements-starter.txt
+scipy>=1.10,<2
