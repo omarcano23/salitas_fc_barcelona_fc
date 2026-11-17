@@ -1,63 +1,75 @@
-# Solución de posesión del equipo — FC Barcelona Hackathon 2027
+# Team Ball Possession Solution — FC Barcelona Hackathon 2027
 
-Este directorio contiene **únicamente nuestro código** de segmentación de posesión. Se incorpora a una copia del [repositorio oficial](https://github.com/metrica-sports/more-than-a-hack-2027), cuyos archivos se mantienen intactos.
+This directory contains **only our team's code** for ball possession segmentation. It is designed to be integrated into a copy of the [official competition repository](https://github.com/metrica-sports/more-than-a-hack-2027), while keeping all original competition files unchanged.
 
-## Qué hace
+## Overview
 
-1. **Lee y estandariza** el tracking, la homografía y Smart Tagging proporcionados por la organización.
-2. **Construye familias de señales** geométricas, temporales y de movimiento, y reconstruye las observaciones faltantes del balón.
-3. **Analiza juego interrumpido** con 15 detectores futbolísticos (`juego_parado/th01_*.py` a `th15_*.py`).
-4. **Resuelve juego activo e inactivo** mediante condiciones futbolísticas y continuidad temporal. Asigna **H** (Barcelona), **A** (Athletic Club), **D** (balón fuera de juego) o **X** (sin respuesta).
-5. **Genera el archivo de entrega** con una fila por frame del vídeo táctico (199.319 filas).
+The solution follows a rule-based football analytics pipeline:
 
-Las condiciones y umbrales de la solución fueron revisados por el equipo mediante criterio futbolístico y experiencia en analítica deportiva.
+1. **Data ingestion and standardization:** Reads and aligns player and ball tracking data, homography, and Smart Tagging annotations provided by the competition organizers.
+2. **Feature engineering:** Builds families of geometric, temporal, spatial, and movement-related features, including the reconstruction of missing ball observations.
+3. **Dead-ball detection:** Analyzes interruptions in play using 15 football-specific detectors (`juego_parado/th01_*.py` through `th15_*.py`).
+4. **Possession inference:** Distinguishes between active and inactive play using football-specific conditions and temporal continuity. Assigns one of four labels:
+   - **H:** FC Barcelona possession.
+   - **A:** Athletic Club possession.
+   - **D:** Ball out of play.
+   - **X:** No decision.
+5. **Submission generation:** Produces one prediction per tactical video frame, resulting in **199,319 rows**.
 
-## Instrucciones: un solo comando
+The solution's decision rules and thresholds were reviewed by the team using football expertise and sports analytics experience.
 
-**Requisitos:** utilizar la copia base del concurso, sin modificar `games.py`, `starter/`, `evaluation/`, ni las dependencias oficiales. Los datos oficiales deben estar ubicados como indica [DATA.md](https://github.com/metrica-sports/more-than-a-hack-2027/blob/main/DATA.md) (por defecto bajo `data/tactical/`, o usando `MTAH_DATA_DIR`).
+## Execution — One Command
 
-**Paso 1.** Extraer este ZIP **en la raíz de ese repositorio**, junto a `games.py`. Los archivos del concurso no vienen incluidos ni se sustituyen.
+### Requirements
 
-**Paso 2.** Desde esa misma raíz, instalar los requisitos si es la primera ejecución:
+Use an original copy of the competition repository without modifying `games.py`, `starter/`, `evaluation/`, or the official dependencies.
+
+The official datasets must be located according to [DATA.md](https://github.com/metrica-sports/more-than-a-hack-2027/blob/main/DATA.md), typically under `data/tactical/`, or configured using the `MTAH_DATA_DIR` environment variable.
+
+### Step 1 — Add the Team's Code
+
+Extract the solution package into the **root directory of the official repository**, alongside `games.py`.
+
+The package does not include or replace any files provided by the competition organizers.
+
+### Step 2 — Install Dependencies
+
+From the repository root, run:
 
 ```bash
 python -m pip install -r requirements.txt
 python -m pip install -r requirements-equipo.txt
 ```
 
-**Paso 3.** Ejecutar **solo este comando**:
+### Step 3 — Generate the Final Submission
+
+Run the following command:
 
 ```bash
 python generar_entrega.py
 ```
 
-El programa llama internamente a las etapas necesarias, incluidos los 15 detectores y el motor final. **No es necesario ejecutar otros scripts ni ningún evaluador.** Al terminar, el CSV queda en:
+This command automatically executes the required processing stages, including the 15 dead-ball detectors and the final possession inference engine.
+
+**No additional scripts or external evaluation tools need to be executed.**
+
+### Output
+
+The generated submission file is saved at:
 
 ```text
 local_outputs/entrega/posesion_fc_barcelona.csv
 ```
 
-No se escribe en la raíz del repositorio. Contiene las columnas `frame,label` y los frames `0` a `199318` en orden. El programa realiza una comprobación local del formato y de la huella de etiquetas de la configuración seleccionada; esto **no es una evaluación contra ground truth**. Si avisa de una huella diferente, el archivo generado no se puede considerar idéntico a la salida de referencia.
+The CSV is not written to the repository root.
 
-El **CSV** se sube al formulario oficial, no al repositorio público. El nombre para el formulario debe ajustarse al nombre del equipo solicitado por la organización; renombrar una copia si hace falta.
+It contains the following columns:
 
-## Qué se incluye en el commit
-
-Los scripts Python de este paquete, la carpeta `juego_parado/`, `requirements-equipo.txt`, `README_SOLUCION.md`, `DOCUMENTO_TECNICO.md` y el archivo `local_outputs/.gitignore`. **No incluir** `data/`, `local_outputs/` generado, reportes `ETAPA_*.md`, videos, claves ni CSV de tracking.
-
-**Commit selectivo desde la raíz del repositorio:**
-
-```bash
-git add README_SOLUCION.md DOCUMENTO_TECNICO.md requirements-equipo.txt config.py generar_entrega.py run.py dead_ball_detectors.py g8_episode_engine.py g9_episode_refinement.py integrar_solo_th.py s*.py juego_parado/
-git add -f local_outputs/.gitignore
-git diff --cached --name-only
-git commit -m "Add rule-based possession pipeline"
+```csv
+frame,label
+0,H
+1,H
+2,H
 ```
 
-Revisar lo que muestra `git diff --cached --name-only` **antes de confirmar el commit**. El repositorio oficial suministra `games.py`, los cargadores y la documentación propia del concurso.
-
-## Limitaciones
-
-El balón puede faltar en oclusiones y duelos; el tracker de jugadores tiene fragmentación de identidades y Smart Tagging es automático. Las recepciones breves, los rebotes y los momentos exactos de reanudación pueden ser ambiguos. La inferencia emplea reglas y continuidad temporal, sin depender de etiquetas humanas del partido al ejecutarse.
-
-Documentación oficial: [Datos](https://github.com/metrica-sports/more-than-a-hack-2027/blob/main/DATA.md) · [Requisitos de entrega](https://github.com/metrica-sports/more-than-a-hack-2027/blob/main/SUBMISSION.md).
+*The rows
